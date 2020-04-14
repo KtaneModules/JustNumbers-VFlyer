@@ -129,17 +129,21 @@ public class JustNumbersScript : MonoBehaviour
 		int temp1 = indicators + batteryCount;
 		int digit1 = DR(temp1);
 		answer += digit1.ToString();
+		Debug.LogFormat("[Just Numbers #{0}] The first number is {1}.", moduleId, temp1);
 		Debug.LogFormat("[Just Numbers #{0}] The first digit is {1}.", moduleId, digit1);
 		// Second Digit
 		int batteryHolderCount = bomb.GetBatteryHolderCount();
-		int temp2 = batteryHolderCount + strikes + digit1;
+		int LastDigit = bomb.GetSerialNumberNumbers().Last();
+		int temp2 = batteryHolderCount + strikes + digit1 + LastDigit;
 		int digit2 = DR(temp2);
 		answer += digit2.ToString();
+		Debug.LogFormat("[Just Numbers #{0}] The second number is {1}.", moduleId, temp2);
 		Debug.LogFormat("[Just Numbers #{0}] The second digit is {1}.", moduleId, digit2);
 		// Third Digit
 		int temp3 = digit1 + digit2;
 		int digit3 = DR(temp3);
 		answer += digit3.ToString();
+		Debug.LogFormat("[Just Numbers #{0}] The third number is {1}.", moduleId, temp3);
 		Debug.LogFormat("[Just Numbers #{0}] The third digit is {1}.", moduleId, digit3);
 		Debug.LogFormat("[Just Numbers #{0}] The answer is {1}.", moduleId, answer);
 	}
