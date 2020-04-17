@@ -133,8 +133,8 @@ public class JustNumbersScript : MonoBehaviour
 		Debug.LogFormat("[Just Numbers #{0}] The first digit is {1}.", moduleId, digit1);
 		// Second Digit
 		int batteryHolderCount = bomb.GetBatteryHolderCount();
-		int LastDigit = bomb.GetSerialNumberNumbers().Last();
-		int temp2 = batteryHolderCount + strikes + digit1 + LastDigit;
+		int FirstDigit = bomb.GetSerialNumberNumbers().First();
+		int temp2 = batteryHolderCount + strikes + FirstDigit;
 		int digit2 = DR(temp2);
 		answer += digit2.ToString();
 		Debug.LogFormat("[Just Numbers #{0}] The second number is {1}.", moduleId, temp2);
