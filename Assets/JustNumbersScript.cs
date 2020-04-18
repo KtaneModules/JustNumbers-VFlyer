@@ -147,4 +147,49 @@ public class JustNumbersScript : MonoBehaviour
 		Debug.LogFormat("[Just Numbers #{0}] The third digit is {1}.", moduleId, digit3);
 		Debug.LogFormat("[Just Numbers #{0}] The answer is {1}.", moduleId, answer);
 	}
+	
+	//twitch plays
+    #pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"To submit the number in the module, use !{0} submit [3-digit number]";
+    #pragma warning restore 414
+	
+	string[] Numerals = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
+	
+	IEnumerator ProcessTwitchCommand(string command)
+	{
+		string[] parameters = command.Split(' ');
+		if (Regex.IsMatch(parameters[0], @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+		{
+			yield return null;
+			if (parameters.Length != 2)
+			{
+				yield return "sendtochaterror Invalid parameter length.";
+				yield break;
+			}
+			
+			else if (parameters.Length == 2)
+			{
+				foreach (char c in parameters[1])
+				{
+					if (!c.ToString().EqualsAny(Numerals))
+					{
+						yield return "sendtochaterror The number contains an invalid character.";
+						yield break;
+					}
+				}
+				
+				if (parameters[1].Length != 3)
+				{
+					yield return "sendtochaterror The number is longer/shorter than 3 characters.";
+					yield break;
+				}
+				
+				foreach (char d in parameters[1])
+				{
+					buttons[Int32.Parse(d.ToString())].OnInteract();
+					yield return new WaitForSecondsRealtime(0.2f);
+				}
+			}
+		}
+	}
 }
