@@ -21,6 +21,7 @@ public class JustNumbersScript : MonoBehaviour
 	private int PressCount = 0;
 	int strikes = 0;
 	int tempStrikes = 0;
+	int Unicorn = 0;
 
 	// Log stuff
 	static int moduleIdCounter = 1;
@@ -39,7 +40,7 @@ public class JustNumbersScript : MonoBehaviour
 
 	void Start()
 	{
-		int Unicorn = rnd.Range(0, 100);
+		Unicorn = rnd.Range(0, 100);
 		if(Unicorn == 78)
 		{
 			for(int i = 0; i < 10; i++)
@@ -65,6 +66,7 @@ public class JustNumbersScript : MonoBehaviour
 				continue;
 			}
 			tempStrikes = bomb.GetStrikes();
+			answer = "";
 			GetAnswer();
 			yield return null;
 		}
@@ -90,6 +92,7 @@ public class JustNumbersScript : MonoBehaviour
 					buttonTexts[i].color = new Color32(0, 255, 0, 255);
 				}
 				Debug.LogFormat("[Just Numbers #{0}] Sequence correct. Module solved.", moduleId);
+				moduleSolved = true;
 				Audio.PlaySoundAtTransform("solve", Module.transform);
 				Module.HandlePass();
 			}
@@ -99,7 +102,6 @@ public class JustNumbersScript : MonoBehaviour
 				PressCount = 0;
 				Debug.LogFormat("[Just Numbers #{0}] Incorrect sequence : {1}, Strike", moduleId, UserInput);
 				UserInput = "";
-				Audio.PlaySoundAtTransform("strike", Module.transform);
 				Module.HandleStrike();
 			}
 		}
