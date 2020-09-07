@@ -20,8 +20,7 @@ public class JustNumbersScript : MonoBehaviour
 	string answer = "";
 	private int PressCount = 0;
 	int strikes = 0;
-	int tempStrikes = 0;
-	int Unicorn = 0;
+	bool hasUnicorn = false;
 
 	// Log stuff
 	static int moduleIdCounter = 1;
@@ -40,9 +39,9 @@ public class JustNumbersScript : MonoBehaviour
 
 	void Start()
 	{
-		Unicorn = rnd.Range(0, 100);
-		if(Unicorn == 78)
+		if(rnd.value <= 0.01f)
 		{
+			hasUnicorn = true;
 			for(int i = 0; i < 10; i++)
 			{
 				buttonTexts[i].color = new Color32(255, 0, 0, 255);
@@ -51,26 +50,29 @@ public class JustNumbersScript : MonoBehaviour
 			Debug.LogFormat("[Just Numbers #{0}] You got a unicorn, submit 000.", moduleId);
 			return;
 		}
-		StartCoroutine(StrikesUpdate());
-		GetAnswer();
-	}
-
-	IEnumerator StrikesUpdate()
-	{
-		while(!moduleSolved)
-		{
-			yield return new WaitForSeconds(0.1f);
-			strikes = bomb.GetStrikes();
-			if(tempStrikes == strikes)
-			{
-				continue;
-			}
-			tempStrikes = bomb.GetStrikes();
-			answer = "";
-			GetAnswer();
-			yield return null;
+		else
+        {
+			Debug.LogFormat("[Just Numbers #{0}] The module will only calculate as soon as the 3rd digit is typed. However a solution can be generated at 0 strikes.", moduleId);
+			int indicators = bomb.GetIndicators().Count();
+			int batteryCount = bomb.GetBatteryCount();
+			int temp1 = indicators + batteryCount;
+			int digit1 = DR(temp1);
+			Debug.LogFormat("[Just Numbers #{0}] The first number should be {1}.", moduleId, temp1);
+			Debug.LogFormat("[Just Numbers #{0}] The first digit should be {1}.", moduleId, digit1);
+			// Second Digit
+			int batteryHolderCount = bomb.GetBatteryHolderCount();
+			int FirstDigit = bomb.GetSerialNumberNumbers().First();
+			int temp2 = batteryHolderCount + bomb.GetStrikes() + FirstDigit;
+			int digit2 = DR(temp2);
+			Debug.LogFormat("[Just Numbers #{0}] The second number should be {1}.", moduleId, temp2);
+			Debug.LogFormat("[Just Numbers #{0}] The second digit should be {1}.", moduleId, digit2);
+			// Third Digit
+			int temp3 = digit1 + digit2;
+			int digit3 = DR(temp3);
+			Debug.LogFormat("[Just Numbers #{0}] The third number should be {1}.", moduleId, temp3);
+			Debug.LogFormat("[Just Numbers #{0}] The third digit should be {1}.", moduleId, digit3);
+			Debug.LogFormat("[Just Numbers #{0}] The answer should be {1} at {2} strike(s).", moduleId, new int[] { digit1, digit2, digit3 }.Join(""), bomb.GetStrikes());
 		}
-		yield return null;
 	}
 
 	void ButtonPress(KMSelectable button)
@@ -85,6 +87,11 @@ public class JustNumbersScript : MonoBehaviour
 		PressCount++;
 		if(PressCount == 3)
 		{
+			if (!hasUnicorn)
+			{
+				Debug.LogFormat("[Just Numbers #{0}] Recalculating the solution at {1} strike(s).", moduleId, bomb.GetStrikes());
+				GetAnswer();
+			}
 			if(UserInput == answer)
 			{
 				for(int i = 0; i < 10; i++)
@@ -98,9 +105,8 @@ public class JustNumbersScript : MonoBehaviour
 			}
 			else
 			{
-				answer = "";
 				PressCount = 0;
-				Debug.LogFormat("[Just Numbers #{0}] Incorrect sequence : {1}, Strike", moduleId, UserInput);
+				Debug.LogFormat("[Just Numbers #{0}] You submitted \"{1}\" which is not correct. Strike!", moduleId, UserInput);
 				UserInput = "";
 				Module.HandleStrike();
 			}
@@ -125,34 +131,35 @@ public class JustNumbersScript : MonoBehaviour
 
 	void GetAnswer()
 	{
+		answer = "";
 		// First Digit
 		int indicators = bomb.GetIndicators().Count();
 		int batteryCount = bomb.GetBatteryCount();
 		int temp1 = indicators + batteryCount;
 		int digit1 = DR(temp1);
 		answer += digit1.ToString();
-		Debug.LogFormat("[Just Numbers #{0}] The first number is {1}.", moduleId, temp1);
-		Debug.LogFormat("[Just Numbers #{0}] The first digit is {1}.", moduleId, digit1);
+		Debug.LogFormat("[Just Numbers #{0}] The first number should be {1}.", moduleId, temp1);
+		Debug.LogFormat("[Just Numbers #{0}] The first digit should be {1}.", moduleId, digit1);
 		// Second Digit
 		int batteryHolderCount = bomb.GetBatteryHolderCount();
 		int FirstDigit = bomb.GetSerialNumberNumbers().First();
-		int temp2 = batteryHolderCount + strikes + FirstDigit;
+		int temp2 = batteryHolderCount + bomb.GetStrikes() + FirstDigit;
 		int digit2 = DR(temp2);
 		answer += digit2.ToString();
-		Debug.LogFormat("[Just Numbers #{0}] The second number is {1}.", moduleId, temp2);
-		Debug.LogFormat("[Just Numbers #{0}] The second digit is {1}.", moduleId, digit2);
+		Debug.LogFormat("[Just Numbers #{0}] The second number should be {1}.", moduleId, temp2);
+		Debug.LogFormat("[Just Numbers #{0}] The second digit should be {1}.", moduleId, digit2);
 		// Third Digit
 		int temp3 = digit1 + digit2;
 		int digit3 = DR(temp3);
 		answer += digit3.ToString();
-		Debug.LogFormat("[Just Numbers #{0}] The third number is {1}.", moduleId, temp3);
-		Debug.LogFormat("[Just Numbers #{0}] The third digit is {1}.", moduleId, digit3);
-		Debug.LogFormat("[Just Numbers #{0}] The answer is {1}.", moduleId, answer);
+		Debug.LogFormat("[Just Numbers #{0}] The third number should be {1}.", moduleId, temp3);
+		Debug.LogFormat("[Just Numbers #{0}] The third digit should be {1}.", moduleId, digit3);
+		Debug.LogFormat("[Just Numbers #{0}] The answer should be {1} at {2} strike(s).", moduleId, answer, bomb.GetStrikes());
 	}
 	
 	//twitch plays
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"To submit the number in the module, use !{0} submit [3-digit number]";
+    private readonly string TwitchHelpMessage = "Submit a 3 digit number on the module with \"!{0} submit ###\"";
     #pragma warning restore 414
 	
 	string[] Numerals = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
@@ -188,8 +195,8 @@ public class JustNumbersScript : MonoBehaviour
 				
 				foreach (char d in parameters[1])
 				{
-					buttons[Int32.Parse(d.ToString())].OnInteract();
-					yield return new WaitForSecondsRealtime(0.2f);
+					buttons[int.Parse(d.ToString())].OnInteract();
+					yield return new WaitForSeconds(0.2f);
 				}
 			}
 		}
