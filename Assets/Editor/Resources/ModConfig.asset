@@ -13,7 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: JustNumbers
   title: Just Numbers [REUPLOAD]
-  author: bomberjack, Samuel Nicholson, VFlyer
+  author: bomberjack, VFlyer
   description: 'Yes...this exists
 
 
@@ -31,7 +31,7 @@ MonoBehaviour:
     Module ID: JustNumbersModule
 
 
-    Temporary manual = https://docs.google.com/document/d/1vwgIboXQMdYIEHeiJCy6U49eQcjdRmhQ8olN32zLYkY/edit'
+    Manual (From the Repo): https://ktane.timwi.de/HTML/Just%20Numbers.html'
   version: 1.0_01
   outputFolder: build
   previewImage: {fileID: 2800000, guid: f0d7d1b0a74fef94da1fd25001282afc, type: 3}

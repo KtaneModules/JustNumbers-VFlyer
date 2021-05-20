@@ -15,7 +15,7 @@ public class JustNumbersScript : MonoBehaviour
 	public KMBombModule Module;
 	public KMSelectable[] buttons;
 	public TextMesh[] buttonTexts;
-	string unicornAnswer = "000";
+    readonly string unicornAnswer = "000";
 	string UserInput = "";
 	string answer = "";
 	private int PressCount = 0;
@@ -47,50 +47,37 @@ public class JustNumbersScript : MonoBehaviour
 				buttonTexts[i].color = new Color32(255, 0, 0, 255);
 			}
 			answer = unicornAnswer;
-			Debug.LogFormat("[Just Numbers #{0}] You got a unicorn, submit 000.", moduleId);
+			Debug.LogFormat("[Just Numbers #{0}] You got a rare condition that has occured, submit 000 to disarm the module instead.", moduleId);
 			return;
 		}
 		else
         {
 			Debug.LogFormat("[Just Numbers #{0}] The module will only calculate as soon as the 3rd digit is typed. However a solution can be generated at 0 strikes.", moduleId);
-			int indicators = bomb.GetIndicators().Count();
-			int batteryCount = bomb.GetBatteryCount();
-			int temp1 = indicators + batteryCount;
-			int digit1 = DR(temp1);
-			Debug.LogFormat("[Just Numbers #{0}] The first number should be {1}.", moduleId, temp1);
-			Debug.LogFormat("[Just Numbers #{0}] The first digit should be {1}.", moduleId, digit1);
-			// Second Digit
-			int batteryHolderCount = bomb.GetBatteryHolderCount();
-			int FirstDigit = bomb.GetSerialNumberNumbers().First();
-			int temp2 = batteryHolderCount + bomb.GetStrikes() + FirstDigit;
-			int digit2 = DR(temp2);
-			Debug.LogFormat("[Just Numbers #{0}] The second number should be {1}.", moduleId, temp2);
-			Debug.LogFormat("[Just Numbers #{0}] The second digit should be {1}.", moduleId, digit2);
-			// Third Digit
-			int temp3 = digit1 + digit2;
-			int digit3 = DR(temp3);
-			Debug.LogFormat("[Just Numbers #{0}] The third number should be {1}.", moduleId, temp3);
-			Debug.LogFormat("[Just Numbers #{0}] The third digit should be {1}.", moduleId, digit3);
-			Debug.LogFormat("[Just Numbers #{0}] The answer should be {1} at {2} strike(s).", moduleId, new int[] { digit1, digit2, digit3 }.Join(""), bomb.GetStrikes());
+			GetAnswer();
 		}
 	}
 
 	void ButtonPress(KMSelectable button)
 	{
 		Audio.PlaySoundAtTransform("press", button.transform);
-		button.AddInteractionPunch();
+		button.AddInteractionPunch(0.5f);
 		if(moduleSolved)
 		{
 			return;
 		}
 		UserInput += button.GetComponentInChildren<TextMesh>().text;
 		PressCount++;
-		if(PressCount == 3)
+		if(PressCount >= 3)
 		{
 			if (!hasUnicorn)
 			{
-				Debug.LogFormat("[Just Numbers #{0}] Recalculating the solution at {1} strike(s).", moduleId, bomb.GetStrikes());
-				GetAnswer();
+				var strikeCnt = bomb.GetStrikes();
+				if (strikes != strikeCnt)
+				{
+					strikes = strikeCnt;
+					Debug.LogFormat("[Just Numbers #{0}] Recalculating the solution at {1} strike(s).", moduleId, strikes);
+					GetAnswer();
+				}
 			}
 			if(UserInput == answer)
 			{
@@ -98,7 +85,7 @@ public class JustNumbersScript : MonoBehaviour
 				{
 					buttonTexts[i].color = new Color32(0, 255, 0, 255);
 				}
-				Debug.LogFormat("[Just Numbers #{0}] Sequence correct. Module solved.", moduleId);
+				Debug.LogFormat("[Just Numbers #{0}] You submitted the correct sequence of numbers. Module solved.", moduleId);
 				moduleSolved = true;
 				Audio.PlaySoundAtTransform("solve", Module.transform);
 				Module.HandlePass();
@@ -138,66 +125,75 @@ public class JustNumbersScript : MonoBehaviour
 		int temp1 = indicators + batteryCount;
 		int digit1 = DR(temp1);
 		answer += digit1.ToString();
-		Debug.LogFormat("[Just Numbers #{0}] The first number should be {1}.", moduleId, temp1);
-		Debug.LogFormat("[Just Numbers #{0}] The first digit should be {1}.", moduleId, digit1);
+		Debug.LogFormat("[Just Numbers #{0}] After adding the number of indicators and batteries, the result should be {1}.", moduleId, temp1);
+		Debug.LogFormat("[Just Numbers #{0}] The first digit to input should be {1}.", moduleId, digit1);
 		// Second Digit
 		int batteryHolderCount = bomb.GetBatteryHolderCount();
-		int FirstDigit = bomb.GetSerialNumberNumbers().First();
-		int temp2 = batteryHolderCount + bomb.GetStrikes() + FirstDigit;
+		int FirstDigit = bomb.GetSerialNumberNumbers().FirstOrDefault();
+		int temp2 = batteryHolderCount + strikes + FirstDigit;
 		int digit2 = DR(temp2);
 		answer += digit2.ToString();
-		Debug.LogFormat("[Just Numbers #{0}] The second number should be {1}.", moduleId, temp2);
-		Debug.LogFormat("[Just Numbers #{0}] The second digit should be {1}.", moduleId, digit2);
+		Debug.LogFormat("[Just Numbers #{0}] After adding the number of battery holders, strikes, and the first serial number digit, the result should be {1}.", moduleId, temp2);
+		Debug.LogFormat("[Just Numbers #{0}] The second digit to input should be {1}.", moduleId, digit2);
 		// Third Digit
 		int temp3 = digit1 + digit2;
 		int digit3 = DR(temp3);
 		answer += digit3.ToString();
-		Debug.LogFormat("[Just Numbers #{0}] The third number should be {1}.", moduleId, temp3);
+		Debug.LogFormat("[Just Numbers #{0}] After adding the first and second digits, the result should be {1}.", moduleId, temp3);
 		Debug.LogFormat("[Just Numbers #{0}] The third digit should be {1}.", moduleId, digit3);
-		Debug.LogFormat("[Just Numbers #{0}] The answer should be {1} at {2} strike(s).", moduleId, answer, bomb.GetStrikes());
+		Debug.LogFormat("[Just Numbers #{0}] The answer should be {1} at {2} strike(s).", moduleId, answer, strikes);
 	}
 	
-	//twitch plays
+	//twitch plays handling begins here
     #pragma warning disable 414
     private readonly string TwitchHelpMessage = "Submit a 3 digit number on the module with \"!{0} submit ###\"";
     #pragma warning restore 414
 	
-	string[] Numerals = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
+	//string[] Numerals = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
 	
 	IEnumerator ProcessTwitchCommand(string command)
 	{
-		string[] parameters = command.Split(' ');
-		if (Regex.IsMatch(parameters[0], @"^\s*submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+		var cmdSubmit = Regex.Match(command, @"^\s*submit\s+(\d+(\s\d+)*)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+		//string[] parameters = command.Split(' ');
+		if (cmdSubmit.Success)
 		{
-			yield return null;
-			if (parameters.Length != 2)
+			var allSelectables = new List<KMSelectable>();
+			var possibleDigits = cmdSubmit.Value.Substring(6).Replace(" ","");
+			var possibleSelectables = new Dictionary<char, KMSelectable>
 			{
-				yield return "sendtochaterror Invalid parameter length.";
-				yield break;
-			}
-			
-			else if (parameters.Length == 2)
-			{
-				foreach (char c in parameters[1])
-				{
-					if (!c.ToString().EqualsAny(Numerals))
-					{
-						yield return "sendtochaterror The number contains an invalid character.";
-						yield break;
-					}
-				}
-				
-				if (parameters[1].Length != 3)
-				{
-					yield return "sendtochaterror The number is longer/shorter than 3 characters.";
+				{'0', buttons[0] },
+				{'1', buttons[1] },
+				{'2', buttons[2] },
+				{'3', buttons[3] },
+				{'4', buttons[4] },
+				{'5', buttons[5] },
+				{'6', buttons[6] },
+				{'7', buttons[7] },
+				{'8', buttons[8] },
+				{'9', buttons[9] },
+			};
+			foreach (char a in possibleDigits)
+            {
+				if (possibleSelectables.ContainsKey(a))
+					allSelectables.Add(possibleSelectables[a]);
+				else
+                {
+					yield return string.Format("sendtochaterror The given character '{0}' is not a digit", a);
 					yield break;
 				}
-				
-				foreach (char d in parameters[1])
-				{
-					buttons[int.Parse(d.ToString())].OnInteract();
-					yield return new WaitForSeconds(0.2f);
-				}
+
+            }
+
+			if (allSelectables.Count != 3)
+            {
+				yield return string.Format("sendtochaterror You provided {0} digit(s) when I expected exactly 3 digits.", allSelectables.Count);
+				yield break;
+            }
+			yield return null;
+			foreach (var d in allSelectables)
+			{
+				d.OnInteract();
+				yield return new WaitForSeconds(0.2f);
 			}
 		}
 	}
